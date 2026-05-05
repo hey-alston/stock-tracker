@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="資金追蹤">
+<title>台股資金追蹤</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  :root {
+    --bg:#0f0f13;--surface:#18181f;--surface2:#22222c;--border:#2e2e3a;
+    --text:#eeeef2;--text2:#888899;--text3:#55556a;
+    --green:#2dd6a0;--green-bg:#0e2e24;--amber:#f5a623;--amber-bg:#2d1f08;
+    --red:#f05555;--blue:#5b9cf6;--accent:#5b9cf6;--purple:#b78cf7;
+    --radius:14px;--radius-sm:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:48px;}
+  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:18px 20px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
+  .header-title{font-size:17px;font-weight:600;}
+  .header-date{font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;}
+  .avail-hero{background:linear-gradient(160deg,#101e3a 0%,#0f0f13 60%);padding:28px 20px 24px;border-bottom:1px solid var(--border);}
+  .avail-label{font-size:12px;color:var(--text2);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;}
+  .avail-amount{font-family:'DM Mono',monospace;font-size:38px;font-weight:500;color:var(--green);letter-spacing:-0.02em;line-height:1;margin-bottom:6px;transition:color 0.3s;}
+  .avail-amount.amber{color:var(--amber);}.avail-amount.red{color:var(--red);}
+  .avail-sub{font-size:12px;color:var(--text3);}
+  .pills{display:flex;gap:10px;padding:16px 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .pills::-webkit-scrollbar{display:none;}
+  .pill{flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;min-width:130px;}
+  .pill-label{font-size:11px;color:var(--text2);margin-bottom:5px;}
+  .pill-val{font-family:'DM Mono',monospace;font-size:17px;font-weight:500;}
+  .pill-val.blue{color:var(--blue);}.pill-val.amber{color:var(--amber);}.pill-val.green{color:var(--green);}.pill-val.muted{color:var(--text2);}.pill-val.purple{color:var(--purple);}
+  .content{padding:0 16px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+  .card-header{padding:14px 16px 12px;border-bottom:1px solid var(--border);}
+  .card-title{font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0.06em;text-transform:uppercase;}
+  .card-body{padding:16px;}
+  .input-wrap{flex:1;position:relative;display:flex;align-items:center;}
+  input[type=number],input[type=date]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Mono',monospace;font-size:15px;padding:11px 42px 11px 12px;appearance:none;-webkit-appearance:none;outline:none;transition:border-color 0.2s;}
+  input[type=number]:focus,input[type=date]:focus{border-color:var(--accent);}
+  input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
+  .input-unit{position:absolute;right:12px;font-size:12px;color:var(--text3);pointer-events:none;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .col-field{display:flex;flex-direction:column;gap:6px;}
+  .col-label{font-size:12px;color:var(--text2);}
+  .settle-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;flex-direction:column;gap:10px;}
+  .settle-top{display:flex;align-items:center;gap:8px;}
+  .badge{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;}
+  .badge.out{background:var(--amber-bg);color:var(--amber);}.badge.in{background:var(--green-bg);color:var(--green);}
+  .settle-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .del-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;}
+  .del-btn:active{border-color:var(--red);color:var(--red);}
+  .add-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .btn{padding:12px;border-radius:var(--radius-sm);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-align:center;border:1px solid var(--border);background:var(--surface2);color:var(--text);width:100%;}
+  .btn:active{opacity:0.7;transform:scale(0.98);}
+  .btn.amber{border-color:var(--amber-bg);background:var(--amber-bg);color:var(--amber);}
+  .btn.green-btn{border-color:var(--green-bg);background:var(--green-bg);color:var(--green);}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600;}
+  .btn.cam{background:#1e1e2e;border-color:#3a3a55;color:var(--purple);}
+  .formula{background:var(--surface2);border-radius:var(--radius-sm);padding:14px;}
+  .formula-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid var(--border);}
+  .formula-row:last-child{border-bottom:none;}
+  .formula-key{color:var(--text2);}
+  .formula-val{font-family:'DM Mono',monospace;}
+  .ref-note{font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.6;}
+  .pnl-row{display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border-radius:var(--radius-sm);padding:12px 14px;margin-top:10px;}
+  .pnl-label{font-size:12px;color:var(--text2);}
+  .pnl-val{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;}
+  .save-bar{padding:16px;display:flex;gap:8px;}
+  .save-hint{font-size:12px;color:var(--text3);padding:0 16px 12px;}
+  .empty-note{font-size:13px;color:var(--text3);padding:4px 0 8px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">📊 台股資金追蹤</div>
+  <div class="header-date" id="today-label"></div>
+</div>
+
+<div class="avail-hero">
+  <div class="avail-label">今日實際可動用</div>
+  <div class="avail-amount" id="hero-avail">—</div>
+  <div class="avail-sub" id="hero-sub">填入資料後自動計算</div>
+</div>
+
+<div class="pills">
+  <div class="pill"><div class="pill-label">銀行餘額</div><div class="pill-val blue" id="p-bank">—</div></div>
+  <div class="pill"><div class="pill-label">T+2 待扣</div><div class="pill-val amber" id="p-out">—</div></div>
+  <div class="pill"><div class="pill-label">T+2 待入</div><div class="pill-val green" id="p-in">—</div></div>
+  <div class="pill"><div class="pill-label">庫存市值</div><div class="pill-val purple" id="p-market">—</div></div>
+</div>
+
+<div class="content">
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">銀行餘額</div></div>
+    <div class="card-body">
+      <div class="input-wrap">
+        <input type="number" id="bankBalance" placeholder="0" inputmode="numeric">
+        <span class="input-unit">元</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">近三日交割款</div></div>
+    <div class="card-body">
+      <div class="ref-note">待扣款 = 買進尚未扣款（減少可動用）<br>待入款 = 賣出尚未入帳（增加可動用）</div>
+      <div id="settle-list"></div>
+      <div class="add-row">
+        <button class="btn amber" onclick="addRow('out')">＋ 待扣款</button>
+        <button class="btn green-btn" onclick="addRow('in')">＋ 待入款</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">計算明細</div></div>
+    <div class="card-body">
+      <div class="formula">
+        <div class="formula-row"><span class="formula-key">銀行餘額</span><span class="formula-val" id="f-bank">—</span></div>
+        <div class="formula-row"><span class="formula-key" style="color:var(--amber)">− 待扣款合計</span><span class="formula-val" style="color:var(--amber)" id="f-out">—</span></div>
+        <div class="formula-row"><span class="formula-key" style="color:var(--green)">＋ 待入款合計</span><span class="formula-val" style="color:var(--green)" id="f-in">—</span></div>
+        <div class="formula-row" style="font-weight:600;font-size:14px;border-bottom:1px solid var(--border)">
+          <span style="color:var(--text)">今日可動用</span>
+          <span class="formula-val" id="f-avail">—</span>
+        </div>
+        <div class="formula-row"><span class="formula-key" style="color:var(--purple)">＋ 庫存總市值</span><span class="formula-val" style="color:var(--purple)" id="f-market">—</span></div>
+        <div class="formula-row" style="font-weight:600;font-size:15px;border-bottom:none;padding-top:10px">
+          <span style="color:var(--text)">帳上總資產估計</span>
+          <span class="formula-val" style="color:var(--purple)" id="f-total">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">庫存資訊（參考）</div></div>
+    <div class="card-body">
+      <div class="ref-note">成本與市值分開填，可以看出目前損益狀況。</div>
+      <div class="two-col">
+        <div class="col-field">
+          <div class="col-label">庫存總成本</div>
+          <div class="input-wrap">
+            <input type="number" id="stockCost" placeholder="0" inputmode="numeric">
+            <span class="input-unit">元</span>
+          </div>
+        </div>
+        <div class="col-field">
+          <div class="col-label">庫存總市值（今日）</div>
+          <div class="input-wrap">
+            <input type="number" id="stockMarket" placeholder="0" inputmode="numeric">
+            <span class="input-unit">元</span>
+          </div>
+        </div>
+      </div>
+      <div class="pnl-row">
+        <div class="pnl-label">庫存未實現損益</div>
+        <div class="pnl-val" id="pnl-val">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="save-bar">
+    <button class="btn primary" style="flex:1" onclick="saveState()">儲存快照</button>
+    <button class="btn cam" style="flex:1" onclick="saveImage()">📷 存成圖片</button>
+    <button class="btn" style="width:64px" onclick="clearAll()">清除</button>
+  </div>
+  <div class="save-hint" id="save-hint"></div>
+
+</div>
+
+<script>
+const SK='tw_stock_v5';
+let rows=[];
+
+function today(){return new Date().toISOString().slice(0,10);}
+function fmt(n){if(n===null||n===undefined||n==='')return'—';const abs=Math.abs(Math.round(n));return(n<0?'-':'')+'$'+abs.toLocaleString();}
+
+function addRow(type,data){
+  const id=Date.now()+Math.random();
+  rows.push({id,type:data?.type||type,date:data?.date||today(),amount:data?.amount||''});
+  renderRows();recalc();
+}
+function removeRow(id){rows=rows.filter(r=>r.id!==id);renderRows();recalc();}
+function updateRow(id,key,val){
+  const r=rows.find(r=>r.id===id);
+  if(r)r[key]=key==='amount'?(val===''?'':parseFloat(val)||0):val;
+  recalc();
+}
+
+function renderRows(){
+  const el=document.getElementById('settle-list');
+  if(!rows.length){el.innerHTML='<div class="empty-note">尚無交割款項目</div>';return;}
+  el.innerHTML=rows.map(r=>`
+    <div class="settle-item">
+      <div class="settle-top">
+        <span class="badge ${r.type}">${r.type==='out'?'待扣款':'待入款'}</span>
+        <button class="del-btn" onclick="removeRow(${r.id})">×</button>
+      </div>
+      <div class="settle-inputs">
+        <input type="date" value="${r.date}" onchange="updateRow(${r.id},'date',this.value)">
+        <div class="input-wrap">
+          <input type="number" value="${r.amount}" placeholder="金額" inputmode="numeric" oninput="updateRow(${r.id},'amount',this.value)">
+          <span class="input-unit">元</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function recalc(){
+  const bank=parseFloat(document.getElementById('bankBalance').value)||0;
+  const cost=parseFloat(document.getElementById('stockCost').value)||0;
+  const market=parseFloat(document.getElementById('stockMarket').value)||0;
+  const totalOut=rows.filter(r=>r.type==='out').reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
+  const totalIn=rows.filter(r=>r.type==='in').reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
+  const avail=bank-totalOut+totalIn;
+  const totalAsset=avail+market;
+  const pnl=(cost&&market)?market-cost:null;
+
+  const hasAnyData = bank||totalOut||totalIn;
+  const hero=document.getElementById('hero-avail');
+  hero.textContent=hasAnyData?fmt(avail):'—';
+  hero.className='avail-amount'+(avail<0?' red':avail<50000&&hasAnyData?' amber':'');
+  document.getElementById('hero-sub').textContent=hasAnyData?(avail<0?'⚠️ 資金不足，注意交割風險':'可用於買進現股'):'填入資料後自動計算';
+
+  document.getElementById('p-bank').textContent=bank?fmt(bank):'—';
+  document.getElementById('p-out').textContent=totalOut?fmt(totalOut):'—';
+  document.getElementById('p-in').textContent=totalIn?fmt(totalIn):'—';
+  document.getElementById('p-market').textContent=market?fmt(market):'—';
+
+  document.getElementById('f-bank').textContent=fmt(bank);
+  document.getElementById('f-out').textContent=totalOut?'- '+fmt(totalOut):'$0';
+  document.getElementById('f-in').textContent=totalIn?'+ '+fmt(totalIn):'$0';
+  const fav=document.getElementById('f-avail');
+  fav.textContent=hasAnyData?fmt(avail):'—';
+  fav.style.color=avail<0?'var(--red)':avail<50000&&hasAnyData?'var(--amber)':'var(--green)';
+  document.getElementById('f-market').textContent=market?fmt(market):'—';
+  document.getElementById('f-total').textContent=(hasAnyData&&market)?fmt(totalAsset):'—';
+
+  const pv=document.getElementById('pnl-val');
+  if(pnl!==null){
+    pv.textContent=(pnl>=0?'▲ +':'▼ ')+(pnl<0?'':'')+fmt(Math.abs(pnl)).replace('$','$');
+    pv.textContent=(pnl>=0?'▲ +$':'▼ -$')+Math.abs(Math.round(pnl)).toLocaleString();
+    pv.style.color=pnl>=0?'var(--green)':'var(--red)';
+  }else{pv.textContent='—';pv.style.color='var(--text2)';}
+}
+
+function saveState(){
+  const s={
+    bankBalance:document.getElementById('bankBalance').value,
+    stockCost:document.getElementById('stockCost').value,
+    stockMarket:document.getElementById('stockMarket').value,
+    rows,savedAt:new Date().toLocaleString('zh-TW')
+  };
+  try{localStorage.setItem(SK,JSON.stringify(s));}catch(e){}
+  document.getElementById('save-hint').textContent='✓ 已儲存 '+s.savedAt;
+}
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem(SK);if(!raw)return;
+    const s=JSON.parse(raw);
+    if(s.bankBalance)document.getElementById('bankBalance').value=s.bankBalance;
+    if(s.stockCost)document.getElementById('stockCost').value=s.stockCost;
+    if(s.stockMarket)document.getElementById('stockMarket').value=s.stockMarket;
+    if(s.rows)rows=s.rows;
+    if(s.savedAt)document.getElementById('save-hint').textContent='上次儲存：'+s.savedAt;
+    renderRows();recalc();
+  }catch(e){}
+}
+
+function clearAll(){
+  if(!confirm('確定要清除所有資料？'))return;
+  ['bankBalance','stockCost','stockMarket'].forEach(id=>document.getElementById(id).value='');
+  rows=[];renderRows();recalc();
+  try{localStorage.removeItem(SK);}catch(e){}
+  document.getElementById('save-hint').textContent='';
+}
+
+function saveImage(){
+  const bank=parseFloat(document.getElementById('bankBalance').value)||0;
+  const cost=parseFloat(document.getElementById('stockCost').value)||0;
+  const market=parseFloat(document.getElementById('stockMarket').value)||0;
+  const totalOut=rows.filter(r=>r.type==='out').reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
+  const totalIn=rows.filter(r=>r.type==='in').reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
+  const avail=bank-totalOut+totalIn;
+  const totalAsset=avail+market;
+  const pnl=(cost&&market)?market-cost:null;
+  const now=new Date().toLocaleString('zh-TW');
+
+  const W=720, H=market||cost?640:540;
+  const canvas=document.createElement('canvas');
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+
+  function rr(x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  }
+  function card(x,y,w,h){rr(x,y,w,h,12);ctx.fillStyle='#18181f';ctx.fill();ctx.strokeStyle='#2e2e3a';ctx.lineWidth=1;ctx.stroke();}
+  function fc(n){if(!n&&n!==0)return'—';return(n<0?'-':'')+'$'+Math.abs(Math.round(n)).toLocaleString();}
+
+  // bg
+  ctx.fillStyle='#0f0f13';ctx.fillRect(0,0,W,H);
+
+  // header
+  ctx.fillStyle='#18181f';ctx.fillRect(0,0,W,60);
+  ctx.fillStyle='#2e2e3a';ctx.fillRect(0,59,W,1);
+  ctx.font='600 26px sans-serif';ctx.fillStyle='#eeeef2';ctx.fillText('📊 台股資金追蹤',32,40);
+  ctx.font='20px monospace';ctx.fillStyle='#888899';ctx.textAlign='right';ctx.fillText(now,W-32,40);ctx.textAlign='left';
+
+  // pills (4個)
+  const pillData=[
+    {l:'銀行餘額',v:fc(bank),c:'#5b9cf6'},
+    {l:'T+2 待扣',v:totalOut?fc(totalOut):'—',c:'#f5a623'},
+    {l:'T+2 待入',v:totalIn?fc(totalIn):'—',c:'#2dd6a0'},
+    {l:'庫存市值',v:market?fc(market):'—',c:'#b78cf7'},
+  ];
+  pillData.forEach((p,i)=>{
+    const x=32+i*165,y=74,w=155,h=64;
+    card(x,y,w,h);
+    ctx.font='18px sans-serif';ctx.fillStyle='#888899';ctx.fillText(p.l,x+12,y+22);
+    ctx.font='500 20px monospace';ctx.fillStyle=p.c;ctx.fillText(p.v,x+12,y+52);
+  });
+
+  // 明細卡
+  const cardY=152;
+  card(32,cardY,W-64,248);
+  ctx.font='600 17px sans-serif';ctx.fillStyle='#888899';ctx.fillText('計算明細',48,cardY+24);
+  ctx.fillStyle='#2e2e3a';ctx.fillRect(48,cardY+32,W-96,1);
+
+  const detailRows=[
+    {k:'銀行餘額',v:fc(bank),kc:'#888899',vc:'#eeeef2'},
+    {k:'− 待扣款合計',v:totalOut?'- '+fc(totalOut):'$0',kc:'#f5a623',vc:'#f5a623'},
+    {k:'＋ 待入款合計',v:totalIn?'+ '+fc(totalIn):'$0',kc:'#2dd6a0',vc:'#2dd6a0'},
+    {k:'今日可動用',v:bank?fc(avail):'—',kc:'#eeeef2',vc:avail<0?'#f05555':avail<50000?'#f5a623':'#2dd6a0',bold:true},
+    {k:'＋ 庫存總市值',v:market?fc(market):'—',kc:'#b78cf7',vc:'#b78cf7'},
+    {k:'帳上總資產估計',v:(bank&&market)?fc(totalAsset):'—',kc:'#eeeef2',vc:'#b78cf7',bold:true},
+  ];
+  detailRows.forEach((r,i)=>{
+    const y=cardY+48+i*33;
+    if(i===3||i===5){ctx.fillStyle='#2e2e3a';ctx.fillRect(48,y-6,W-96,1);}
+    ctx.font=(r.bold?'600':'400')+' 19px sans-serif';ctx.fillStyle=r.kc;ctx.fillText(r.k,48,y+14);
+    ctx.font=(r.bold?'600':'500')+' 21px monospace';ctx.fillStyle=r.vc;ctx.textAlign='right';ctx.fillText(r.v,W-48,y+14);ctx.textAlign='left';
+  });
+
+  // 庫存損益卡
+  if(market||cost){
+    const cy=cardY+260;
+    card(32,cy,W-64,84);
+    ctx.font='600 17px sans-serif';ctx.fillStyle='#888899';ctx.fillText('庫存資訊',48,cy+24);
+    ctx.fillStyle='#2e2e3a';ctx.fillRect(48,cy+32,W-96,1);
+    ctx.font='18px sans-serif';ctx.fillStyle='#888899';ctx.fillText('成本',48,cy+62);
+    ctx.font='500 21px monospace';ctx.fillStyle='#5b9cf6';ctx.fillText(fc(cost),140,cy+62);
+    ctx.font='18px sans-serif';ctx.fillStyle='#888899';ctx.fillText('市值',340,cy+62);
+    ctx.font='500 21px monospace';ctx.fillStyle='#b78cf7';ctx.fillText(fc(market),432,cy+62);
+    if(pnl!==null){
+      const pnlTxt=(pnl>=0?'▲ +$':'▼ -$')+Math.abs(Math.round(pnl)).toLocaleString();
+      ctx.font='500 21px monospace';ctx.fillStyle=pnl>=0?'#2dd6a0':'#f05555';
+      ctx.textAlign='right';ctx.fillText(pnlTxt,W-48,cy+62);ctx.textAlign='left';
+    }
+  }
+
+  // footer
+  ctx.font='16px sans-serif';ctx.fillStyle='#2e2e3a';ctx.textAlign='center';ctx.fillText('台股資金追蹤',W/2,H-14);ctx.textAlign='left';
+
+  canvas.toBlob(blob=>{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='資金快照_'+today()+'.png';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),3000);
+    document.getElementById('save-hint').textContent='✓ 圖片已產生！在手機上長按圖片可儲存到相簿';
+  },'image/png');
+}
+
+document.getElementById('today-label').textContent=today().replace(/-/g,'/');
+['bankBalance','stockCost','stockMarket'].forEach(id=>document.getElementById(id).addEventListener('input',recalc));
+renderRows();loadState();recalc();
+</script>
+</body>
+</html>
