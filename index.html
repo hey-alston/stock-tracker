@@ -1,389 +1,255 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="資金追蹤">
-<title>台股資金追蹤</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="羽球收帳"/>
+<title>羽球收帳本</title>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
-  :root {
-    --bg:#0f0f13;--surface:#18181f;--surface2:#22222c;--border:#2e2e3a;
-    --text:#eeeef2;--text2:#888899;--text3:#55556a;
-    --green:#2dd6a0;--green-bg:#0e2e24;--amber:#f5a623;--amber-bg:#2d1f08;
-    --red:#f05555;--blue:#5b9cf6;--accent:#5b9cf6;--purple:#b78cf7;
-    --radius:14px;--radius-sm:8px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:48px;}
-  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:18px 20px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
-  .header-title{font-size:17px;font-weight:600;}
-  .header-date{font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;}
-  .avail-hero{background:linear-gradient(160deg,#101e3a 0%,#0f0f13 60%);padding:28px 20px 24px;border-bottom:1px solid var(--border);}
-  .avail-label{font-size:12px;color:var(--text2);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;}
-  .avail-amount{font-family:'DM Mono',monospace;font-size:38px;font-weight:500;color:var(--green);letter-spacing:-0.02em;line-height:1;margin-bottom:6px;transition:color 0.3s;}
-  .avail-amount.amber{color:var(--amber);}.avail-amount.red{color:var(--red);}
-  .avail-sub{font-size:12px;color:var(--text3);}
-  .pills{display:flex;gap:10px;padding:16px 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-  .pills::-webkit-scrollbar{display:none;}
-  .pill{flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;min-width:130px;}
-  .pill-label{font-size:11px;color:var(--text2);margin-bottom:5px;}
-  .pill-val{font-family:'DM Mono',monospace;font-size:17px;font-weight:500;}
-  .pill-val.blue{color:var(--blue);}.pill-val.amber{color:var(--amber);}.pill-val.green{color:var(--green);}.pill-val.muted{color:var(--text2);}.pill-val.purple{color:var(--purple);}
-  .content{padding:0 16px;}
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
-  .card-header{padding:14px 16px 12px;border-bottom:1px solid var(--border);}
-  .card-title{font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0.06em;text-transform:uppercase;}
-  .card-body{padding:16px;}
-  .input-wrap{flex:1;position:relative;display:flex;align-items:center;}
-  input[type=number],input[type=date]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Mono',monospace;font-size:15px;padding:11px 42px 11px 12px;appearance:none;-webkit-appearance:none;outline:none;transition:border-color 0.2s;}
-  input[type=number]:focus,input[type=date]:focus{border-color:var(--accent);}
-  input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
-  .input-unit{position:absolute;right:12px;font-size:12px;color:var(--text3);pointer-events:none;}
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .col-field{display:flex;flex-direction:column;gap:6px;}
-  .col-label{font-size:12px;color:var(--text2);}
-  .settle-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;flex-direction:column;gap:10px;}
-  .settle-top{display:flex;align-items:center;gap:8px;}
-  .badge{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;}
-  .badge.out{background:var(--amber-bg);color:var(--amber);}.badge.in{background:var(--green-bg);color:var(--green);}
-  .settle-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .del-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;}
-  .del-btn:active{border-color:var(--red);color:var(--red);}
-  .add-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .btn{padding:12px;border-radius:var(--radius-sm);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-align:center;border:1px solid var(--border);background:var(--surface2);color:var(--text);width:100%;}
-  .btn:active{opacity:0.7;transform:scale(0.98);}
-  .btn.amber{border-color:var(--amber-bg);background:var(--amber-bg);color:var(--amber);}
-  .btn.green-btn{border-color:var(--green-bg);background:var(--green-bg);color:var(--green);}
-  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600;}
-  .btn.cam{background:#1e1e2e;border-color:#3a3a55;color:var(--purple);}
-  .formula{background:var(--surface2);border-radius:var(--radius-sm);padding:14px;}
-  .formula-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid var(--border);}
-  .formula-row:last-child{border-bottom:none;}
-  .formula-key{color:var(--text2);}
-  .formula-val{font-family:'DM Mono',monospace;}
-  .ref-note{font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.6;}
-  .pnl-row{display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border-radius:var(--radius-sm);padding:12px 14px;margin-top:10px;}
-  .pnl-label{font-size:12px;color:var(--text2);}
-  .pnl-val{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;}
-  .save-bar{padding:16px;display:flex;gap:8px;}
-  .save-hint{font-size:12px;color:var(--text3);padding:0 16px 12px;}
-  .empty-note{font-size:13px;color:var(--text3);padding:4px 0 8px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#f7f6f3;font-family:'PingFang TC','Noto Sans TC',sans-serif;}
 </style>
 </head>
 <body>
-
-<div class="header">
-  <div class="header-title">📊 台股資金追蹤</div>
-  <div class="header-date" id="today-label"></div>
-</div>
-
-<div class="avail-hero">
-  <div class="avail-label">今日實際可動用</div>
-  <div class="avail-amount" id="hero-avail">—</div>
-  <div class="avail-sub" id="hero-sub">填入資料後自動計算</div>
-</div>
-
-<div class="pills">
-  <div class="pill"><div class="pill-label">銀行餘額</div><div class="pill-val blue" id="p-bank">—</div></div>
-  <div class="pill"><div class="pill-label">T+2 待扣</div><div class="pill-val amber" id="p-out">—</div></div>
-  <div class="pill"><div class="pill-label">T+2 待入</div><div class="pill-val green" id="p-in">—</div></div>
-  <div class="pill"><div class="pill-label">庫存市值</div><div class="pill-val purple" id="p-market">—</div></div>
-</div>
-
-<div class="content">
-
-  <div class="card">
-    <div class="card-header"><div class="card-title">銀行餘額</div></div>
-    <div class="card-body">
-      <div class="input-wrap">
-        <input type="number" id="bankBalance" placeholder="0" inputmode="numeric">
-        <span class="input-unit">元</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><div class="card-title">近三日交割款</div></div>
-    <div class="card-body">
-      <div class="ref-note">待扣款 = 買進尚未扣款（減少可動用）<br>待入款 = 賣出尚未入帳（增加可動用）</div>
-      <div id="settle-list"></div>
-      <div class="add-row">
-        <button class="btn amber" onclick="addRow('out')">＋ 待扣款</button>
-        <button class="btn green-btn" onclick="addRow('in')">＋ 待入款</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><div class="card-title">計算明細</div></div>
-    <div class="card-body">
-      <div class="formula">
-        <div class="formula-row"><span class="formula-key">銀行餘額</span><span class="formula-val" id="f-bank">—</span></div>
-        <div class="formula-row"><span class="formula-key" style="color:var(--amber)">− 待扣款合計</span><span class="formula-val" style="color:var(--amber)" id="f-out">—</span></div>
-        <div class="formula-row"><span class="formula-key" style="color:var(--green)">＋ 待入款合計</span><span class="formula-val" style="color:var(--green)" id="f-in">—</span></div>
-        <div class="formula-row" style="font-weight:600;font-size:14px;border-bottom:1px solid var(--border)">
-          <span style="color:var(--text)">今日可動用</span>
-          <span class="formula-val" id="f-avail">—</span>
-        </div>
-        <div class="formula-row"><span class="formula-key" style="color:var(--purple)">＋ 庫存總市值</span><span class="formula-val" style="color:var(--purple)" id="f-market">—</span></div>
-        <div class="formula-row" style="font-weight:600;font-size:15px;border-bottom:none;padding-top:10px">
-          <span style="color:var(--text)">帳上總資產估計</span>
-          <span class="formula-val" style="color:var(--purple)" id="f-total">—</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><div class="card-title">庫存資訊（參考）</div></div>
-    <div class="card-body">
-      <div class="ref-note">成本與市值分開填，可以看出目前損益狀況。</div>
-      <div class="two-col">
-        <div class="col-field">
-          <div class="col-label">庫存總成本</div>
-          <div class="input-wrap">
-            <input type="number" id="stockCost" placeholder="0" inputmode="numeric">
-            <span class="input-unit">元</span>
-          </div>
-        </div>
-        <div class="col-field">
-          <div class="col-label">庫存總市值（今日）</div>
-          <div class="input-wrap">
-            <input type="number" id="stockMarket" placeholder="0" inputmode="numeric">
-            <span class="input-unit">元</span>
-          </div>
-        </div>
-      </div>
-      <div class="pnl-row">
-        <div class="pnl-label">庫存未實現損益</div>
-        <div class="pnl-val" id="pnl-val">—</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="save-bar">
-    <button class="btn primary" style="flex:1" onclick="saveState()">儲存快照</button>
-    <button class="btn cam" style="flex:1" onclick="saveImage()">📷 存成圖片</button>
-    <button class="btn" style="width:64px" onclick="clearAll()">清除</button>
-  </div>
-  <div class="save-hint" id="save-hint"></div>
-
-</div>
-
+<div id="root"></div>
 <script>
-const SK='tw_stock_v5';
-let rows=[];
-
-function today(){return new Date().toISOString().slice(0,10);}
-function fmt(n){if(n===null||n===undefined||n==='')return'—';const abs=Math.abs(Math.round(n));return(n<0?'-':'')+'$'+abs.toLocaleString();}
-
-function addRow(type,data){
-  const id=Date.now()+Math.random();
-  rows.push({id,type:data?.type||type,date:data?.date||today(),amount:data?.amount||''});
-  renderRows();recalc();
+const { useState, useMemo, useEffect } = React;
+const PAYMENT_METHODS = ["\u672A\u6536", "\u73FE\u91D1", "Line Pay"];
+const METHOD_STYLE = {
+  "\u672A\u6536": { bg: "#f1f0ee", color: "#999", border: "#ddd" },
+  "\u73FE\u91D1": { bg: "#e8f5e9", color: "#2e7d32", border: "#81c784" },
+  "Line Pay": { bg: "#e3f2fd", color: "#0a5c9a", border: "#64b5f6" }
+};
+const PRICE_MAP = { 1: 90, 2: 180, 3: 270, 4: 320 };
+const PRICE_TIERS = [{ hours: 1, price: 90 }, { hours: 2, price: 180 }, { hours: 3, price: 270 }, { hours: 4, price: 320 }];
+const STORAGE_KEY = "badminton_tracker_v1";
+function getPrice(h) {
+  return PRICE_MAP[h] ?? 0;
 }
-function removeRow(id){rows=rows.filter(r=>r.id!==id);renderRows();recalc();}
-function updateRow(id,key,val){
-  const r=rows.find(r=>r.id===id);
-  if(r)r[key]=key==='amount'?(val===''?'':parseFloat(val)||0):val;
-  recalc();
+function generateId() {
+  return Math.random().toString(36).slice(2, 9);
 }
-
-function renderRows(){
-  const el=document.getElementById('settle-list');
-  if(!rows.length){el.innerHTML='<div class="empty-note">尚無交割款項目</div>';return;}
-  el.innerHTML=rows.map(r=>`
-    <div class="settle-item">
-      <div class="settle-top">
-        <span class="badge ${r.type}">${r.type==='out'?'待扣款':'待入款'}</span>
-        <button class="del-btn" onclick="removeRow(${r.id})">×</button>
-      </div>
-      <div class="settle-inputs">
-        <input type="date" value="${r.date}" onchange="updateRow(${r.id},'date',this.value)">
-        <div class="input-wrap">
-          <input type="number" value="${r.amount}" placeholder="金額" inputmode="numeric" oninput="updateRow(${r.id},'amount',this.value)">
-          <span class="input-unit">元</span>
-        </div>
-      </div>
-    </div>`).join('');
+function parseSessionHeader(line) {
+  const idMatch = line.match(/時段[（(]([A-Z])[)）]/);
+  const timeMatch = line.match(/[（(](\d+)[~～](\d+)[)）]/);
+  if (idMatch && timeMatch) return { id: idMatch[1], start: parseInt(timeMatch[1]), end: parseInt(timeMatch[2]) };
+  return null;
 }
-
-function recalc(){
-  const bank=parseFloat(document.getElementById('bankBalance').value)||0;
-  const cost=parseFloat(document.getElementById('stockCost').value)||0;
-  const market=parseFloat(document.getElementById('stockMarket').value)||0;
-  const totalOut=rows.filter(r=>r.type==='out').reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
-  const totalIn=rows.filter(r=>r.type==='in').reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
-  const avail=bank-totalOut+totalIn;
-  const totalAsset=avail+market;
-  const pnl=(cost&&market)?market-cost:null;
-
-  const hasAnyData = bank||totalOut||totalIn;
-  const hero=document.getElementById('hero-avail');
-  hero.textContent=hasAnyData?fmt(avail):'—';
-  hero.className='avail-amount'+(avail<0?' red':avail<50000&&hasAnyData?' amber':'');
-  document.getElementById('hero-sub').textContent=hasAnyData?(avail<0?'⚠️ 資金不足，注意交割風險':'可用於買進現股'):'填入資料後自動計算';
-
-  document.getElementById('p-bank').textContent=bank?fmt(bank):'—';
-  document.getElementById('p-out').textContent=totalOut?fmt(totalOut):'—';
-  document.getElementById('p-in').textContent=totalIn?fmt(totalIn):'—';
-  document.getElementById('p-market').textContent=market?fmt(market):'—';
-
-  document.getElementById('f-bank').textContent=fmt(bank);
-  document.getElementById('f-out').textContent=totalOut?'- '+fmt(totalOut):'$0';
-  document.getElementById('f-in').textContent=totalIn?'+ '+fmt(totalIn):'$0';
-  const fav=document.getElementById('f-avail');
-  fav.textContent=hasAnyData?fmt(avail):'—';
-  fav.style.color=avail<0?'var(--red)':avail<50000&&hasAnyData?'var(--amber)':'var(--green)';
-  document.getElementById('f-market').textContent=market?fmt(market):'—';
-  document.getElementById('f-total').textContent=(hasAnyData&&market)?fmt(totalAsset):'—';
-
-  const pv=document.getElementById('pnl-val');
-  if(pnl!==null){
-    pv.textContent=(pnl>=0?'▲ +':'▼ ')+(pnl<0?'':'')+fmt(Math.abs(pnl)).replace('$','$');
-    pv.textContent=(pnl>=0?'▲ +$':'▼ -$')+Math.abs(Math.round(pnl)).toLocaleString();
-    pv.style.color=pnl>=0?'var(--green)':'var(--red)';
-  }else{pv.textContent='—';pv.style.color='var(--text2)';}
+function parseNameTime(raw) {
+  const m = raw.match(/[（(](\d+)[-~～](\d+)[)）]/);
+  if (m) return { start: parseInt(m[1]), end: parseInt(m[2]) };
+  return null;
 }
-
-function saveState(){
-  const s={
-    bankBalance:document.getElementById('bankBalance').value,
-    stockCost:document.getElementById('stockCost').value,
-    stockMarket:document.getElementById('stockMarket').value,
-    rows,savedAt:new Date().toLocaleString('zh-TW')
-  };
-  try{localStorage.setItem(SK,JSON.stringify(s));}catch(e){}
-  document.getElementById('save-hint').textContent='✓ 已儲存 '+s.savedAt;
+function cleanName(raw) {
+  return raw.replace(/[（(]\d+[-~～]\d+[)）]/, "").replace(/^\d+[.、\s]+/, "").trim();
 }
-
-function loadState(){
-  try{
-    const raw=localStorage.getItem(SK);if(!raw)return;
-    const s=JSON.parse(raw);
-    if(s.bankBalance)document.getElementById('bankBalance').value=s.bankBalance;
-    if(s.stockCost)document.getElementById('stockCost').value=s.stockCost;
-    if(s.stockMarket)document.getElementById('stockMarket').value=s.stockMarket;
-    if(s.rows)rows=s.rows;
-    if(s.savedAt)document.getElementById('save-hint').textContent='上次儲存：'+s.savedAt;
-    renderRows();recalc();
-  }catch(e){}
-}
-
-function clearAll(){
-  if(!confirm('確定要清除所有資料？'))return;
-  ['bankBalance','stockCost','stockMarket'].forEach(id=>document.getElementById(id).value='');
-  rows=[];renderRows();recalc();
-  try{localStorage.removeItem(SK);}catch(e){}
-  document.getElementById('save-hint').textContent='';
-}
-
-function saveImage(){
-  const bank=parseFloat(document.getElementById('bankBalance').value)||0;
-  const cost=parseFloat(document.getElementById('stockCost').value)||0;
-  const market=parseFloat(document.getElementById('stockMarket').value)||0;
-  const totalOut=rows.filter(r=>r.type==='out').reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
-  const totalIn=rows.filter(r=>r.type==='in').reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
-  const avail=bank-totalOut+totalIn;
-  const totalAsset=avail+market;
-  const pnl=(cost&&market)?market-cost:null;
-  const now=new Date().toLocaleString('zh-TW');
-
-  const W=720, H=market||cost?640:540;
-  const canvas=document.createElement('canvas');
-  canvas.width=W;canvas.height=H;
-  const ctx=canvas.getContext('2d');
-
-  function rr(x,y,w,h,r){
-    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
-    ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
-    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
-    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
-    ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
-  }
-  function card(x,y,w,h){rr(x,y,w,h,12);ctx.fillStyle='#18181f';ctx.fill();ctx.strokeStyle='#2e2e3a';ctx.lineWidth=1;ctx.stroke();}
-  function fc(n){if(!n&&n!==0)return'—';return(n<0?'-':'')+'$'+Math.abs(Math.round(n)).toLocaleString();}
-
-  // bg
-  ctx.fillStyle='#0f0f13';ctx.fillRect(0,0,W,H);
-
-  // header
-  ctx.fillStyle='#18181f';ctx.fillRect(0,0,W,60);
-  ctx.fillStyle='#2e2e3a';ctx.fillRect(0,59,W,1);
-  ctx.font='600 26px sans-serif';ctx.fillStyle='#eeeef2';ctx.fillText('📊 台股資金追蹤',32,40);
-  ctx.font='20px monospace';ctx.fillStyle='#888899';ctx.textAlign='right';ctx.fillText(now,W-32,40);ctx.textAlign='left';
-
-  // pills (4個)
-  const pillData=[
-    {l:'銀行餘額',v:fc(bank),c:'#5b9cf6'},
-    {l:'T+2 待扣',v:totalOut?fc(totalOut):'—',c:'#f5a623'},
-    {l:'T+2 待入',v:totalIn?fc(totalIn):'—',c:'#2dd6a0'},
-    {l:'庫存市值',v:market?fc(market):'—',c:'#b78cf7'},
-  ];
-  pillData.forEach((p,i)=>{
-    const x=32+i*165,y=74,w=155,h=64;
-    card(x,y,w,h);
-    ctx.font='18px sans-serif';ctx.fillStyle='#888899';ctx.fillText(p.l,x+12,y+22);
-    ctx.font='500 20px monospace';ctx.fillStyle=p.c;ctx.fillText(p.v,x+12,y+52);
-  });
-
-  // 明細卡
-  const cardY=152;
-  card(32,cardY,W-64,248);
-  ctx.font='600 17px sans-serif';ctx.fillStyle='#888899';ctx.fillText('計算明細',48,cardY+24);
-  ctx.fillStyle='#2e2e3a';ctx.fillRect(48,cardY+32,W-96,1);
-
-  const detailRows=[
-    {k:'銀行餘額',v:fc(bank),kc:'#888899',vc:'#eeeef2'},
-    {k:'− 待扣款合計',v:totalOut?'- '+fc(totalOut):'$0',kc:'#f5a623',vc:'#f5a623'},
-    {k:'＋ 待入款合計',v:totalIn?'+ '+fc(totalIn):'$0',kc:'#2dd6a0',vc:'#2dd6a0'},
-    {k:'今日可動用',v:bank?fc(avail):'—',kc:'#eeeef2',vc:avail<0?'#f05555':avail<50000?'#f5a623':'#2dd6a0',bold:true},
-    {k:'＋ 庫存總市值',v:market?fc(market):'—',kc:'#b78cf7',vc:'#b78cf7'},
-    {k:'帳上總資產估計',v:(bank&&market)?fc(totalAsset):'—',kc:'#eeeef2',vc:'#b78cf7',bold:true},
-  ];
-  detailRows.forEach((r,i)=>{
-    const y=cardY+48+i*33;
-    if(i===3||i===5){ctx.fillStyle='#2e2e3a';ctx.fillRect(48,y-6,W-96,1);}
-    ctx.font=(r.bold?'600':'400')+' 19px sans-serif';ctx.fillStyle=r.kc;ctx.fillText(r.k,48,y+14);
-    ctx.font=(r.bold?'600':'500')+' 21px monospace';ctx.fillStyle=r.vc;ctx.textAlign='right';ctx.fillText(r.v,W-48,y+14);ctx.textAlign='left';
-  });
-
-  // 庫存損益卡
-  if(market||cost){
-    const cy=cardY+260;
-    card(32,cy,W-64,84);
-    ctx.font='600 17px sans-serif';ctx.fillStyle='#888899';ctx.fillText('庫存資訊',48,cy+24);
-    ctx.fillStyle='#2e2e3a';ctx.fillRect(48,cy+32,W-96,1);
-    ctx.font='18px sans-serif';ctx.fillStyle='#888899';ctx.fillText('成本',48,cy+62);
-    ctx.font='500 21px monospace';ctx.fillStyle='#5b9cf6';ctx.fillText(fc(cost),140,cy+62);
-    ctx.font='18px sans-serif';ctx.fillStyle='#888899';ctx.fillText('市值',340,cy+62);
-    ctx.font='500 21px monospace';ctx.fillStyle='#b78cf7';ctx.fillText(fc(market),432,cy+62);
-    if(pnl!==null){
-      const pnlTxt=(pnl>=0?'▲ +$':'▼ -$')+Math.abs(Math.round(pnl)).toLocaleString();
-      ctx.font='500 21px monospace';ctx.fillStyle=pnl>=0?'#2dd6a0':'#f05555';
-      ctx.textAlign='right';ctx.fillText(pnlTxt,W-48,cy+62);ctx.textAlign='left';
+function parseRoster(text) {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const sessions = [];
+  let currentSession = null;
+  for (const line of lines) {
+    const header = parseSessionHeader(line);
+    if (header) {
+      currentSession = { ...header, duration: header.end - header.start, members: [] };
+      sessions.push(currentSession);
+      continue;
+    }
+    if (line.includes("\u5F8C\u88DC")) continue;
+    if (!currentSession) continue;
+    const mm = line.match(/^\d+[.、\s]+(.*)/);
+    if (mm) {
+      const raw = mm[1].trim();
+      if (!raw || /^[.。\-_]+$/.test(raw)) continue;
+      const cleaned = cleanName(raw);
+      if (!cleaned) continue;
+      currentSession.members.push({ rawName: raw, cleanedName: cleaned, timeRange: parseNameTime(raw) });
     }
   }
-
-  // footer
-  ctx.font='16px sans-serif';ctx.fillStyle='#2e2e3a';ctx.textAlign='center';ctx.fillText('台股資金追蹤',W/2,H-14);ctx.textAlign='left';
-
-  canvas.toBlob(blob=>{
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;a.download='資金快照_'+today()+'.png';a.click();
-    setTimeout(()=>URL.revokeObjectURL(url),3000);
-    document.getElementById('save-hint').textContent='✓ 圖片已產生！在手機上長按圖片可儲存到相簿';
-  },'image/png');
+  if (sessions.length === 0) return [];
+  const allEntries = [];
+  for (const sess of sessions) {
+    const nameCount = {}, nameSeen = {};
+    for (const m of sess.members) nameCount[m.cleanedName] = (nameCount[m.cleanedName] || 0) + 1;
+    for (const m of sess.members) {
+      nameSeen[m.cleanedName] = (nameSeen[m.cleanedName] || 0) + 1;
+      allEntries.push({ sessionId: sess.id, sessionStart: sess.start, sessionEnd: sess.end, sessionDuration: sess.duration, cleanedName: m.cleanedName, timeRange: m.timeRange, occurrenceIndex: nameSeen[m.cleanedName] });
+    }
+  }
+  const personMap = {};
+  for (const e of allEntries) {
+    const key = `${e.cleanedName}__${e.occurrenceIndex}`;
+    if (!personMap[key]) personMap[key] = { name: e.cleanedName, sessions: [] };
+    personMap[key].sessions.push({ sessionId: e.sessionId, sessionDuration: e.sessionDuration, timeRange: e.timeRange });
+  }
+  const sessInfoMap = {};
+  for (const e of allEntries) {
+    if (!sessInfoMap[e.sessionId]) sessInfoMap[e.sessionId] = { start: e.sessionStart, end: e.sessionEnd, duration: e.sessionDuration };
+  }
+  return Object.values(personMap).map((p) => {
+    const uniqueSessions = [...new Map(p.sessions.map((s) => [s.sessionId, s])).values()];
+    const intervals = [];
+    for (const sess of uniqueSessions) {
+      const info = sessInfoMap[sess.sessionId];
+      if (!info) continue;
+      intervals.push(sess.timeRange ? { start: sess.timeRange.start, end: sess.timeRange.end } : { start: info.start, end: info.end });
+    }
+    intervals.sort((a, b) => a.start - b.start);
+    const merged = [];
+    for (const iv of intervals) {
+      if (merged.length && iv.start <= merged[merged.length - 1].end) merged[merged.length - 1].end = Math.max(merged[merged.length - 1].end, iv.end);
+      else merged.push({ ...iv });
+    }
+    const hours = merged.reduce((s, iv) => s + (iv.end - iv.start), 0);
+    return { id: generateId(), name: p.name, hours: Math.max(1, Math.min(4, hours)), startHour: merged[0]?.start ?? null, endHour: merged[merged.length - 1]?.end ?? null, method: "\u672A\u6536" };
+  });
 }
-
-document.getElementById('today-label').textContent=today().replace(/-/g,'/');
-['bankBalance','stockCost','stockMarket'].forEach(id=>document.getElementById(id).addEventListener('input',recalc));
-renderRows();loadState();recalc();
+function Badge({ label, count, color, bg }) {
+  if (!count) return null;
+  return /* @__PURE__ */ React.createElement("div", { style: { background: bg, color, borderRadius: 20, padding: "4px 12px", fontSize: 12, fontWeight: 700 } }, label, " ", count, " \u4EBA");
+}
+function App() {
+  const [view, setView] = useState("import");
+  const [rawText, setRawText] = useState("");
+  const [parseError, setParseError] = useState("");
+  const [members, setMembers] = useState([]);
+  const [nameInput, setNameInput] = useState("");
+  const [selectedHours, setSelectedHours] = useState(2);
+  const [sessionTitle, setSessionTitle] = useState(() => {
+    const n = /* @__PURE__ */ new Date();
+    return `${n.getFullYear()}/${n.getMonth() + 1}/${n.getDate()} \u5834\u6B21`;
+  });
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleInput, setTitleInput] = useState(sessionTitle);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data.members) setMembers(data.members);
+        if (data.sessionTitle) {
+          setSessionTitle(data.sessionTitle);
+          setTitleInput(data.sessionTitle);
+        }
+        if (data.members?.length > 0) setView("list");
+      }
+    } catch (e) {
+    }
+    setLoaded(true);
+  }, []);
+  useEffect(() => {
+    if (!loaded) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ members, sessionTitle }));
+    } catch (e) {
+    }
+  }, [members, sessionTitle, loaded]);
+  const handleImport = () => {
+    if (!rawText.trim()) {
+      setParseError("\u8ACB\u8CBC\u4E0A\u540D\u55AE\u5167\u5BB9");
+      return;
+    }
+    const parsed = parseRoster(rawText);
+    if (parsed.length === 0) {
+      setParseError("\u7121\u6CD5\u89E3\u6790\u51FA\u6210\u54E1\uFF0C\u8ACB\u78BA\u8A8D\u683C\u5F0F\u6B63\u78BA");
+      return;
+    }
+    setMembers(parsed);
+    setParseError("");
+    setView("list");
+  };
+  const addMember = () => {
+    const name = nameInput.trim();
+    if (!name) return;
+    setMembers((prev) => [...prev, { id: generateId(), name, hours: selectedHours, startHour: null, endHour: null, method: "\u672A\u6536" }]);
+    setNameInput("");
+  };
+  const removeMember = (id) => setMembers((prev) => prev.filter((m) => m.id !== id));
+  const cycleMethod = (id) => {
+    setMembers((prev) => prev.map((m) => {
+      if (m.id !== id) return m;
+      const idx = PAYMENT_METHODS.indexOf(m.method);
+      return { ...m, method: PAYMENT_METHODS[(idx + 1) % PAYMENT_METHODS.length] };
+    }));
+  };
+  const updateHours = (id, hours) => setMembers((prev) => prev.map((m) => m.id !== id ? m : { ...m, hours }));
+  const clearAll = () => {
+    if (!window.confirm("\u78BA\u5B9A\u8981\u6E05\u7A7A\u672C\u5834\u8CC7\u6599\u55CE\uFF1F")) return;
+    setMembers([]);
+    setRawText("");
+    setView("import");
+    const n = /* @__PURE__ */ new Date();
+    const t = `${n.getFullYear()}/${n.getMonth() + 1}/${n.getDate()} \u5834\u6B21`;
+    setSessionTitle(t);
+    setTitleInput(t);
+  };
+  const stats = useMemo(() => {
+    const total = members.reduce((s, m) => s + getPrice(m.hours), 0);
+    const cashMembers = members.filter((m) => m.method === "\u73FE\u91D1");
+    const lineMembers = members.filter((m) => m.method === "Line Pay");
+    const collected = [...cashMembers, ...lineMembers].reduce((s, m) => s + getPrice(m.hours), 0);
+    const cashTotal = cashMembers.reduce((s, m) => s + getPrice(m.hours), 0);
+    const lineTotal = lineMembers.reduce((s, m) => s + getPrice(m.hours), 0);
+    const pending = total - collected;
+    const unpaidCount = members.filter((m) => m.method === "\u672A\u6536").length;
+    const hourMap = {};
+    for (const m of members) {
+      if (m.startHour == null || m.endHour == null) continue;
+      for (let h = m.startHour; h < m.endHour; h++) hourMap[h] = (hourMap[h] || 0) + 1;
+    }
+    const hourStats = Object.entries(hourMap).map(([h, c]) => ({ hour: parseInt(h), count: c })).sort((a, b) => a.hour - b.hour);
+    const priceBreakdown = PRICE_TIERS.map((t) => ({
+      hours: t.hours,
+      price: t.price,
+      count: members.filter((m) => m.hours === t.hours).length
+    })).filter((p) => p.count > 0);
+    return { total, collected, pending, cashCount: cashMembers.length, lineCount: lineMembers.length, unpaidCount, cashTotal, lineTotal, hourStats, priceBreakdown };
+  }, [members]);
+  const iS = { fontSize: 14, border: "1px solid #ddd", borderRadius: 8, padding: "10px 12px", outline: "none", flex: 1, minWidth: 100, fontFamily: "inherit" };
+  return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: "#f7f6f3", paddingBottom: 60 } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", color: "#fff", padding: "24px 20px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, letterSpacing: 3, color: "#666", marginBottom: 6 } }, "\u7FBD\u7403\u6536\u5E33\u672C"), editingTitle ? /* @__PURE__ */ React.createElement(
+    "input",
+    {
+      autoFocus: true,
+      value: titleInput,
+      onChange: (e) => setTitleInput(e.target.value),
+      onBlur: () => {
+        setSessionTitle(titleInput);
+        setEditingTitle(false);
+      },
+      onKeyDown: (e) => {
+        if (e.key === "Enter") {
+          setSessionTitle(titleInput);
+          setEditingTitle(false);
+        }
+      },
+      style: { fontSize: 20, fontWeight: 700, color: "#fff", background: "transparent", border: "none", borderBottom: "2px solid #555", outline: "none", width: "100%", paddingBottom: 2, fontFamily: "inherit" }
+    }
+  ) : /* @__PURE__ */ React.createElement("div", { onClick: () => {
+    setTitleInput(sessionTitle);
+    setEditingTitle(true);
+  }, style: { fontSize: 20, fontWeight: 700, cursor: "text", display: "flex", alignItems: "center", gap: 8 } }, sessionTitle, " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: "#555" } }, "\u270F\uFE0F")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, display: "flex", gap: 16 } }, PRICE_TIERS.map((t) => /* @__PURE__ */ React.createElement("div", { key: t.hours, style: { fontSize: 12, color: "#666" } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#f0c040", fontWeight: 700 } }, t.hours, "hr"), /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 4 } }, "$", t.price), t.hours === 4 && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 4, color: "#f0c040" } }, "\u2605"))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", background: "#fff", borderBottom: "1px solid #eee" } }, [{ key: "import", label: "\u{1F4CB} \u8CBC\u4E0A\u540D\u55AE" }, { key: "list", label: `\u{1F4B0} \u6536\u5E33\uFF08${members.length}\u4EBA\uFF09` }].map((tab) => /* @__PURE__ */ React.createElement("button", { key: tab.key, onClick: () => setView(tab.key), style: { flex: 1, padding: "14px 0", fontSize: 13, fontWeight: 700, background: "none", border: "none", cursor: "pointer", borderBottom: view === tab.key ? "3px solid #1a1a1a" : "3px solid transparent", color: view === tab.key ? "#1a1a1a" : "#aaa", fontFamily: "inherit" } }, tab.label))), view === "import" && /* @__PURE__ */ React.createElement("div", { style: { padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#aaa", marginBottom: 8, lineHeight: 1.6 } }, "\u5C07 Line \u7FA4\u7D44\u7684\u5831\u540D\u540D\u55AE\u76F4\u63A5\u8CBC\u5165\uFF0C\u7A0B\u5F0F\u6703\u81EA\u52D5\u89E3\u6790\u6642\u6578\u8207\u4EBA\u6578\u3002", /* @__PURE__ */ React.createElement("br", null), "\u652F\u63F4\u683C\u5F0F\uFF1A", /* @__PURE__ */ React.createElement("span", { style: { color: "#555" } }, "\u6642\u6BB5(C)(\u30FB)(18~20)"), "\uFF0C\u6210\u54E1\u4EE5\u6578\u5B57\u5E8F\u865F\u958B\u982D\u3002"), /* @__PURE__ */ React.createElement(
+    "textarea",
+    {
+      value: rawText,
+      onChange: (e) => setRawText(e.target.value),
+      placeholder: "\u6642\u6BB5(C)(\u30FB)(18~20)\n1. \u{1F338}GMeiMei\u{1F338}\n2. EN(18-21)\n...",
+      style: { width: "100%", height: 260, fontSize: 13, lineHeight: 1.7, border: "1px solid #ddd", borderRadius: 10, padding: 12, outline: "none", resize: "vertical", fontFamily: "inherit", background: "#fff" }
+    }
+  ), parseError && /* @__PURE__ */ React.createElement("div", { style: { color: "#c62828", fontSize: 13, marginTop: 8 } }, "\u26A0\uFE0F ", parseError), /* @__PURE__ */ React.createElement("button", { onClick: handleImport, style: { marginTop: 12, width: "100%", padding: "14px 0", background: "#1a1a1a", color: "#fff", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" } }, "\u81EA\u52D5\u89E3\u6790\u4E26\u5E36\u5165 \u2192"), members.length > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => setView("list"), style: { marginTop: 8, width: "100%", padding: "12px 0", background: "#fff", color: "#1a1a1a", border: "2px solid #1a1a1a", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" } }, "\u2190 \u56DE\u5230\u6536\u5E33\u5217\u8868"), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 20, background: "#fff", borderRadius: 10, padding: 14, fontSize: 12, color: "#888", lineHeight: 1.8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, color: "#555", marginBottom: 6 } }, "\u89E3\u6790\u898F\u5247"), /* @__PURE__ */ React.createElement("div", null, "\u2022 \u6709\u62EC\u865F\u6642\u9593 \u2192 \u6309\u62EC\u865F\u6642\u6578\u8A08\u7B97\uFF08\u5982 EN(18-21) = 3hr\uFF09"), /* @__PURE__ */ React.createElement("div", null, "\u2022 \u7121\u62EC\u865F \u2192 \u6309\u51FA\u73FE\u7684\u6642\u6BB5\u6578\u52A0\u7E3D\uFF08C+D\u90FD\u6709 = 4hr\uFF09"), /* @__PURE__ */ React.createElement("div", null, "\u2022 \u540C\u6642\u6BB5\u540C\u540D\u51FA\u73FE\u5169\u6B21 \u2192 \u8996\u70BA\u5169\u4EBA"), /* @__PURE__ */ React.createElement("div", null, "\u2022 \u300C\u5F8C\u88DC\u300D\u6A19\u984C\u884C\u5FFD\u7565\uFF0C\u5F8C\u88DC\u6210\u54E1\u7167\u6A23\u5E36\u5165"), /* @__PURE__ */ React.createElement("div", null, "\u2022 \u5E36\u5165\u5F8C\u53EF\u624B\u52D5\u8ABF\u6574\u6BCF\u4EBA\u6642\u6578"))), view === "list" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: "#fff", borderBottom: "1px solid #eee" } }, [{ label: "\u61C9\u6536\u7E3D\u984D", value: `$${stats.total}`, color: "#333" }, { label: "\u5DF2\u6536", value: `$${stats.collected}`, color: "#2e7d32" }, { label: "\u672A\u6536", value: `$${stats.pending}`, color: stats.pending > 0 ? "#c62828" : "#aaa" }].map((s) => /* @__PURE__ */ React.createElement("div", { key: s.label, style: { padding: "14px 0", textAlign: "center", borderRight: "1px solid #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#aaa", marginBottom: 3 } }, s.label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 800, color: s.color } }, s.value)))), members.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, padding: "10px 16px", background: "#fff", borderBottom: "1px solid #eee", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(Badge, { label: "\u73FE\u91D1", count: stats.cashCount, color: "#2e7d32", bg: "#e8f5e9" }), /* @__PURE__ */ React.createElement(Badge, { label: "Line Pay", count: stats.lineCount, color: "#0a5c9a", bg: "#e3f2fd" }), /* @__PURE__ */ React.createElement(Badge, { label: "\u672A\u4ED8", count: stats.unpaidCount, color: "#c62828", bg: "#ffebee" })), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#fff", marginTop: 10, borderTop: "1px solid #eee", borderBottom: "1px solid #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#aaa", marginBottom: 8, letterSpacing: 1 } }, "\u624B\u52D5\u65B0\u589E"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 8 } }, /* @__PURE__ */ React.createElement("input", { placeholder: "\u59D3\u540D / \u66B1\u7A31", value: nameInput, onChange: (e) => setNameInput(e.target.value), onKeyDown: (e) => e.key === "Enter" && addMember(), style: iS }), /* @__PURE__ */ React.createElement("button", { onClick: addMember, style: { background: "#1a1a1a", color: "#fff", border: "none", borderRadius: 8, padding: "10px 16px", fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" } }, "\uFF0B \u52A0\u5165")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, PRICE_TIERS.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.hours, onClick: () => setSelectedHours(t.hours), style: { flex: 1, padding: "8px 0", borderRadius: 8, border: selectedHours === t.hours ? "2px solid #1a1a1a" : "2px solid #e0e0e0", background: selectedHours === t.hours ? "#1a1a1a" : "#fafafa", color: selectedHours === t.hours ? "#fff" : "#666", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" } }, t.hours, "hr \xB7 $", t.price)))), /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 16px" } }, members.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "48px 0", color: "#bbb", fontSize: 14 } }, "\u5C1A\u672A\u6709\u6210\u54E1", /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12 } }, "\u8ACB\u5148\u5230\u300C\u8CBC\u4E0A\u540D\u55AE\u300D\u9801\u9762\u532F\u5165")) : members.map((m, i) => {
+    const amount = getPrice(m.hours);
+    const ms = METHOD_STYLE[m.method];
+    return /* @__PURE__ */ React.createElement("div", { key: m.id, style: { background: "#fff", border: `1px solid ${m.method !== "\u672A\u6536" ? ms.border : "#eee"}`, borderRadius: 12, padding: "12px 14px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 26, height: 26, borderRadius: "50%", background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#999", flexShrink: 0 } }, i + 1), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 15 } }, m.name), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 800, color: "#333", marginRight: 8 } }, "$", amount)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, PRICE_TIERS.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.hours, onClick: () => updateHours(m.id, t.hours), style: { flex: 1, padding: "3px 0", borderRadius: 20, fontSize: 11, fontWeight: 700, border: m.hours === t.hours ? "1.5px solid #1a1a1a" : "1.5px solid #ddd", background: m.hours === t.hours ? "#1a1a1a" : "#f5f5f5", color: m.hours === t.hours ? "#fff" : "#aaa", cursor: "pointer", fontFamily: "inherit", textAlign: "center" } }, t.hours, "hr")))), /* @__PURE__ */ React.createElement("button", { onClick: () => cycleMethod(m.id), style: { background: ms.bg, color: ms.color, border: `1.5px solid ${ms.border}`, borderRadius: 20, padding: "6px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", minWidth: 80, textAlign: "center", fontFamily: "inherit" } }, m.method === "\u672A\u6536" ? "\u672A\u6536 \u2192" : m.method), /* @__PURE__ */ React.createElement("button", { onClick: () => removeMember(m.id), style: { background: "none", border: "none", color: "#ccc", fontSize: 18, cursor: "pointer", padding: "0 2px", lineHeight: 1 } }, "\xD7"));
+  })), members.length > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px 10px", background: "#1a1a1a", borderRadius: 12, padding: "16px 20px", color: "#fff" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#555", marginBottom: 10, letterSpacing: 2 } }, "\u672C\u5834\u5C0F\u7D50"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa", fontSize: 14 } }, "\u5171 ", members.length, " \u4EBA"), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, "\u61C9\u6536 $", stats.total)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 } }, stats.priceBreakdown.map((p) => /* @__PURE__ */ React.createElement("div", { key: p.hours, style: { background: "#2a2a2a", borderRadius: 8, padding: "5px 10px", fontSize: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#f0c040", fontWeight: 700 } }, "$", p.price), /* @__PURE__ */ React.createElement("span", { style: { color: "#888", margin: "0 4px" } }, "\xD7"), /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontWeight: 700 } }, p.count, " \u4EBA")))), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #2a2a2a", marginBottom: 8 } }), stats.cashCount > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#81c784", fontSize: 14 } }, "\u{1F4B5} \u73FE\u91D1\uFF08", stats.cashCount, " \u4EBA\uFF09"), /* @__PURE__ */ React.createElement("span", { style: { color: "#81c784", fontWeight: 700 } }, "$", stats.cashTotal)), stats.lineCount > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#64b5f6", fontSize: 14 } }, "\u{1F4F1} Line Pay\uFF08", stats.lineCount, " \u4EBA\uFF09"), /* @__PURE__ */ React.createElement("span", { style: { color: "#64b5f6", fontWeight: 700 } }, "$", stats.lineTotal)), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #333", marginTop: 8, paddingTop: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#81c784", fontSize: 14 } }, "\u2713 \u5DF2\u6536\u5408\u8A08"), /* @__PURE__ */ React.createElement("span", { style: { color: "#81c784", fontWeight: 700 } }, "$", stats.collected)), stats.pending > 0 ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#ef9a9a", fontSize: 14 } }, "\u23F3 \u5F85\u6536\uFF08", stats.unpaidCount, " \u4EBA\uFF09"), /* @__PURE__ */ React.createElement("span", { style: { color: "#ef9a9a", fontWeight: 700 } }, "$", stats.pending)) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: "#81c784", fontWeight: 700 } }, "\u2705 \u5168\u90E8\u6536\u6B3E\u5B8C\u6210\uFF01"))), stats.hourStats.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px 10px", background: "#fff", borderRadius: 12, padding: "16px 20px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#aaa", marginBottom: 12, letterSpacing: 2 } }, "\u6BCF\u5C0F\u6642\u5728\u5834\u4EBA\u6578"), stats.hourStats.map(({ hour, count }) => {
+    const maxC = Math.max(...stats.hourStats.map((h) => h.count));
+    return /* @__PURE__ */ React.createElement("div", { key: hour, style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: "#555", fontWeight: 700 } }, hour, ":00 \u2013 ", hour + 1, ":00"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 800, color: "#1a1a1a" } }, count, " \u4EBA")), /* @__PURE__ */ React.createElement("div", { style: { background: "#f0f0f0", borderRadius: 4, height: 8, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${Math.round(count / maxC * 100)}%`, height: "100%", background: "#1a1a1a", borderRadius: 4 } })));
+  })), /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px 20px" } }, /* @__PURE__ */ React.createElement("button", { onClick: clearAll, style: { width: "100%", padding: "12px 0", background: "#fff", color: "#c62828", border: "1.5px solid #ffcdd2", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" } }, "\u{1F5D1} \u6E05\u7A7A\u672C\u5834\uFF0C\u958B\u59CB\u65B0\u5834\u6B21")))));
+}
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
 </script>
 </body>
 </html>
+ 
